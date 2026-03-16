@@ -1,7 +1,7 @@
 // Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <iostream>
 // Include GLEW
 #include <GL/glew.h>
 
@@ -38,41 +38,31 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		if (action == GLFW_PRESS)
 		{
 			isRightMouseHeld = true;
-			firstMouse = true;  // IMPORTANT: prevents a large jump on first drag
 
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			// Seed lastX/lastY directly — avoids callback ordering races entirely
+			double x, y;
+			glfwGetCursorPos(window, &x, &y);
+			lastX = static_cast<float>(x);
+			lastY = static_cast<float>(y);
+
+			// Hide cursor but do NOT lock it — no warp, no X11 issues
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 		}
 		else if (action == GLFW_RELEASE)
 		{
 			isRightMouseHeld = false;
-
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-			// Optional: warp cursor back to window center so it doesn't
-			// reappear in a surprising location after a long drag.
-			int w, h;
-			glfwGetWindowSize(window, &w, &h);
-			glfwSetCursorPos(window, w / 2.0, h / 2.0);
 		}
 	}
 }
 
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	// Ignore all motion unless the user is actively right-click-dragging
 	if (!isRightMouseHeld)
 		return;
 
 	float x = static_cast<float>(xpos);
 	float y = static_cast<float>(ypos);
-
-	if (firstMouse)
-	{
-		lastX = x;
-		lastY = y;
-		firstMouse = false;
-		return;  // skip this frame — no valid delta yet
-	}
 
 	float dx = (x - lastX) * MOUSE_SENSITIVITY;
 	float dy = (lastY - y) * MOUSE_SENSITIVITY;  // inverted: screen Y grows down
@@ -81,11 +71,8 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 
 	yaw += dx;
 	pitch += dy;
-
-	// Clamp pitch so the camera doesn't flip over the poles
 	pitch = glm::clamp(pitch, -89.0f, 89.0f);
 
-	// Recompute the front vector from spherical → Cartesian
 	glm::vec3 front;
 	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	front.y = sin(glm::radians(pitch));
