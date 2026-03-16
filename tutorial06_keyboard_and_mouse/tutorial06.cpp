@@ -18,6 +18,81 @@ using namespace glm;
 #include <common/texture.hpp>
 #include <common/controls.hpp>
 
+extern bool  isRightMouseHeld;
+extern bool  firstMouse;
+extern float lastX;
+extern float lastY;
+extern float yaw;
+extern float pitch;
+extern float MOUSE_SENSITIVITY;
+extern float MOVE_SPEED;
+
+extern glm::vec3 cameraFront;
+
+// Tuning
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			isRightMouseHeld = true;
+			firstMouse = true;  // IMPORTANT: prevents a large jump on first drag
+
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			isRightMouseHeld = false;
+
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+			// Optional: warp cursor back to window center so it doesn't
+			// reappear in a surprising location after a long drag.
+			int w, h;
+			glfwGetWindowSize(window, &w, &h);
+			glfwSetCursorPos(window, w / 2.0, h / 2.0);
+		}
+	}
+}
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	// Ignore all motion unless the user is actively right-click-dragging
+	if (!isRightMouseHeld)
+		return;
+
+	float x = static_cast<float>(xpos);
+	float y = static_cast<float>(ypos);
+
+	if (firstMouse)
+	{
+		lastX = x;
+		lastY = y;
+		firstMouse = false;
+		return;  // skip this frame — no valid delta yet
+	}
+
+	float dx = (x - lastX) * MOUSE_SENSITIVITY;
+	float dy = (lastY - y) * MOUSE_SENSITIVITY;  // inverted: screen Y grows down
+	lastX = x;
+	lastY = y;
+
+	yaw += dx;
+	pitch += dy;
+
+	// Clamp pitch so the camera doesn't flip over the poles
+	pitch = glm::clamp(pitch, -89.0f, 89.0f);
+
+	// Recompute the front vector from spherical → Cartesian
+	glm::vec3 front;
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(front);
+}
+
 int main( void )
 {
 	// Initialise GLFW
@@ -54,8 +129,11 @@ int main( void )
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     // Hide the mouse and enable unlimited mouvement
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+ //   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorPosCallback(window, cursor_position_callback);
+
     // Set the mouse at the center of the screen
     glfwPollEvents();
     glfwSetCursorPos(window, 1024/2, 768/2);
