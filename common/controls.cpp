@@ -48,7 +48,7 @@ float yaw = -90.0f;  // initialized so cameraFront points down -Z
 float pitch = 0.0f;
 
 float MOUSE_SENSITIVITY = 0.1f;
-float MOVE_SPEED = 2.5f;
+float MOVE_SPEED = 0.00025f;
 
 
 
