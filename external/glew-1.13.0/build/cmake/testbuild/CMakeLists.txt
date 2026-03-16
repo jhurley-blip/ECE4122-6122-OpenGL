@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.26)
 project(glew-cmake-test)
 
 find_package(GLEW REQUIRED CONFIG)

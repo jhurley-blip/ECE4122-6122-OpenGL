@@ -1,5 +1,5 @@
 # CMake entry point
-cmake_minimum_required (VERSION 4.0)
+cmake_minimum_required (VERSION 3.26)
 project (Tutorials)
 
 find_package(OpenGL REQUIRED)
@@ -19,7 +19,7 @@ endif()
 
 # Compile external dependencies 
 add_subdirectory (external)
-#add_subdirectory (Hmk3_Skeleton)
+add_subdirectory (Hmk3_Skeleton)
 # On Visual 2005 and above, this module can set the debug working directory
 #cmake_policy(SET CMP0026 OLD)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-fe2273")

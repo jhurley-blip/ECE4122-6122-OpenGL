@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 4.0)
+cmake_minimum_required( VERSION 3.26)
 PROJECT( Assimp )
 
 # Define here the needed parameters
